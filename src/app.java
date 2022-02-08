@@ -3,6 +3,7 @@ import fr.unistra.pelican.Image;
 import fr.unistra.pelican.algorithms.io.ImageLoader;
 import fr.unistra.pelican.algorithms.visualisation.Viewer2D;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -10,6 +11,7 @@ public class app {
     public static void main(String[] args) {
         Image test1 = ImageLoader.exec("/Users/hassenarkab/Downloads/motos/240.jpg");
         median(test1);
+        histogramme(test1);
 
     }
 

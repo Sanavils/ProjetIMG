@@ -1,9 +1,10 @@
+package Partie1.Premier;
+
 import fr.unistra.pelican.ByteImage;
 import fr.unistra.pelican.Image;
 import fr.unistra.pelican.algorithms.io.ImageLoader;
 import fr.unistra.pelican.algorithms.visualisation.Viewer2D;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -35,6 +36,4 @@ public class app {
         }
         Viewer2D.exec(imageModif);
     }
-
 }
-

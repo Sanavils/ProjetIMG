@@ -67,6 +67,10 @@ public class Histo {
         if(pathToSave!=null)
             ChartUtilities.saveChartAsPNG(new File(pathToSave), jfreechart, 900, 600);
     }
+
+    public static void plotHistogram(double[][] histoRGB) {
+
+    }
 }
 
 

@@ -3,44 +3,43 @@ package Partie1.deuxième;
 import fr.unistra.pelican.Image;
 import fr.unistra.pelican.algorithms.io.ImageLoader;
 
-import java.io.IOException;
-
-import static Partie1.troisième.app.Discretisation;
-
 public class app {
 
+
+
     public static void main(String[] args) throws Exception {
-        Image test1 = ImageLoader.exec("./motos/motos/240.jpg");
+        Image test1 = ImageLoader.exec("C:/Users/33783/OneDrive/Images/Webcam/eiffel.jpg");
         Histo(test1);
 
     }
 
-
     public static void Histo(Image test) throws Exception {
-        double[] histoRouge = getHisto(test, 0);
-        double[] histoVert = getHisto(test, 1);
-        double[] histoBleu = getHisto(test, 2);
-        Histo.plotHistogram(histoRouge);
-        Histo.plotHistogram(histoVert);
-        Histo.plotHistogram(histoBleu);
-    }
+        int largeur = test.getXDim();
+        int hauteur = test.getYDim();
+        int nbDim = test.getBDim();
+        double histoRGB[][] = new double[3][256];
 
+        for (int x = 0; x < largeur; x++) {
+            for (int y = 0; y < hauteur; y++) {
+                for (int a = 0; a < nbDim; a++) {
+                    int valeur = test.getPixelXYBByte(x, y, a);
+                    if (a == 0) {
+                        histoRGB[a][valeur] += 1;
+                    } else if (a == 1) {
+                        histoRGB[a][valeur] += 1;
+                    } else if (a == 2) {
+                        histoRGB[a][valeur] += 1;
 
+                    }
+                }
 
-    public static double[] getHisto(Image image, int canal) {
-        double histo[] = new double[256];
-        for (int i = 0; i < histo.length; i++) {
-            histo[i] = 0;
-        }
-        for (int x = 0; x < image.getXDim(); x++) {
-            for (int y = 0; y < image.getYDim(); y++) {
-                histo[image.getPixelXYBByte(x, y, canal)] += 1;
             }
+
         }
-        return histo;
+        Histo.plotHistogram( histoRGB[0]);
+        Histo.plotHistogram( histoRGB[1]);
+        Histo.plotHistogram( histoRGB[2]);
     }
-
-
 
 }
 

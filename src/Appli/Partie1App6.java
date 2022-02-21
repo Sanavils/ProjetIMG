@@ -10,7 +10,7 @@ import java.util.Map;
 import static algoimage.Algorithme.getSimilarImages;
 
 public class Partie1App6 {
-
+/*
     public static void main(String[] args) throws Exception {
 
         List<String> imagesResultat = new ArrayList<>();
@@ -23,6 +23,6 @@ public class Partie1App6 {
 
     }
 
-
+*/
 
 }

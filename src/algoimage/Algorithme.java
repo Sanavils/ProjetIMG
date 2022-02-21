@@ -13,15 +13,38 @@ import java.util.*;
 import static java.lang.Double.parseDouble;
 
 public class Algorithme {
+    private static int SIZE_HISTO=10;
+    private static String DB_PATH="database\\";
     private static String QUERY_PATH="query\\";
-    private static String INDEXES_PATH = "indexes.txt";
-    private static String FILE_SEPARATOR=";";
-    private static String RGB_SEPARATOR = " ";
-    private static String DB_PATH="data\\motos\\";
+    private static int FACTOR=25;
+    private static int FACTORHSV=36;
     private static String HSV="hsv";
     private static String RGB="rgb";
 
+    /**
+     * Lecture d'une image
+     * @param absolutePath
+     * @return
+     */
+    public static Image readImage(String absolutePath) {
+        if(absolutePath == null) {
+            System.out.println("Veuillez indiquer un chemin");
+            return null;
+        }
+        Image img = ImageLoader.exec(absolutePath);
+        System.out.println("Image : " + img.getXDim() + "x"+ img.getYDim());
+        System.out.println("Nombre de caneaux : "+ img.getBDim());
+        return img;
+    }
 
+
+
+
+    /**
+     * Filtre médian pour débruiter une image
+     * @param img
+     * @return
+     */
     public static Image filtreMedian(Image img) {
 
         int ligne = img.getXDim();
@@ -93,228 +116,85 @@ public class Algorithme {
                 img.setPixelXYBByte(i, j, 1, gArray[mediangIndex]);
                 img.setPixelXYBByte(i, j, 2, bArray[medianbIndex]);
 
-                img.setPixelXYByte(i, j, pArray[medianIndex]);
+                //img.setPixelXYByte(i, j, pArray[medianIndex]);
             }
         }
-        Viewer2D.exec(img);
+
         return img;
 
     }
 
-    public static double[][] Histo(Image test) throws Exception {
-        int largeur = test.getXDim();
-        int hauteur = test.getYDim();
-        int nbDim = test.getBDim();
-        double histoRGB[][] = new double[3][256];
+    /**
+     * Histogramme d'une image
+     * @param greyImage
+     * @return
+     */
+    public static double[][] getHistogram(Image image) {
+        ByteImage img = (ByteImage) image;
+        double[][] histogram = new double[256][3];
 
-        for (int x = 0; x < largeur; x++) {
-            for (int y = 0; y < hauteur; y++) {
-                for (int a = 0; a < nbDim; a++) {
-                    int valeur = test.getPixelXYBByte(x, y, a);
-                    if (a == 0) {
-                        histoRGB[a][valeur] += 1;
-                    } else if (a == 1) {
-                        histoRGB[a][valeur] += 1;
-                    } else if (a == 2) {
-                        histoRGB[a][valeur] += 1;
-
-                    }
-                }
-
-            }
-
+        //initialisation de toutes les cases à 0
+        for(int i=0; i < histogram.length; i++) {
+            histogram[i][0] =0;
+            histogram[i][1] =0;
+            histogram[i][2] =0;
         }
 
+        //parcourir l'ensemble des pixels
+        for(int x=0; x<img.getXDim(); x++) {
+            for(int y=0; y<img.getYDim();y++) {
+                int r = img.getPixelXYBByte(x, y, 0);
+                int g = img.getPixelXYBByte(x, y, 1);
+                int b = img.getPixelXYBByte(x, y, 2);
 
-        return histoRGB;
-    }
+                histogram[r][0] +=1;
+                histogram[g][1] +=1;
+                histogram[b][2] +=1;
 
-
-    public static double[][] Discretisation(double[][] hist) throws IOException {
-        double[][] discreteHist = new double[3][hist[0].length / 2];
-        for(int a=0; a<3; a++){
-            for (int i = 0; i < discreteHist[0].length ; i = i+1) {
-                discreteHist[a][i] = hist[a][i] + hist[a][i + 1];
             }
         }
 
-        return discreteHist;
+        return histogram;
 
     }
 
-    public static double[][] normaliser(double[][] histo, int pixels){
-        double[][] n = new double[3][histo[0].length];
-        pixels = histo.length;
-        for(int a=0; a<3; a++){
-            for(int i =0; i< histo[0].length;i++) {
-                n[a][i] = (histo[a][i]) / pixels;
+    /**
+     * Histogramme d'une image
+     * @param greyImage
+     * @return
+     */
+    public static double[][] getHistogramHSV(Image image) {
+        ByteImage img = (ByteImage) image;
+        double[][] histogram = new double[361][3];
+
+        //initialisation de toutes les cases à 0
+        for(int i=0; i < histogram.length; i++) {
+            histogram[i][0] = 0;
+            histogram[i][1] = 0;
+            histogram[i][2] = 0;
+        }
+
+
+        //parcourir l'ensemble des pixels
+        for(int x=0; x<img.getXDim(); x++) {
+            for(int y=0; y<img.getYDim();y++) {
+                int r = img.getPixelXYBByte(x, y, 0);
+                int g = img.getPixelXYBByte(x, y, 1);
+                int b = img.getPixelXYBByte(x, y, 2);
+
+                List<Double> hsvList = convertToHSV(r,g,b);
+
+                int h = (int) Math.round(hsvList.get(0)); // valeur entre 0 et 360
+                int s = (int) Math.round(hsvList.get(1)*100); // 95 puis diviser par 100 pour avoir une valeur entre 0 et 1
+                int v = (int) Math.round(hsvList.get(2)*100); // 15 puis diviser par 100 pour avoir une valeur entre 0 et 1
+
+                histogram[h][0] +=1;
+                histogram[s][1] +=1;
+                histogram[v][2] +=1;
             }
         }
-        return n;
+        return histogram;
     }
-
-    public static Image readImage(String absolutePath) {
-        if(absolutePath == null) {
-            System.out.println("Veuillez indiquer un chemin");
-            return null;
-        }
-        Image img = ImageLoader.exec(absolutePath);
-        System.out.println("Image : " + img.getXDim() + "x"+ img.getYDim());
-        System.out.println("Nombre de caneaux : "+ img.getBDim());
-        return img;
-    }
-
-
-    public static Map<Double, String> getSimilarImages(Image query) throws Exception {
-        //récupération des images
-        List<File> dbFiles = new ArrayList<>();//liste de toutes les images à comparer
-        //récupérer toutes les images
-        File directoryPath = new File(DB_PATH);
-        //List of all files and directories
-        File filesList[] = directoryPath.listFiles();
-        for(File file : filesList) {
-            File innerFilesList[];
-            if(file.isDirectory()) {
-                dbFiles.addAll(Arrays.asList(file.listFiles()));
-            }else if(file.isFile()) dbFiles.add(file);
-        }
-        Map<Double,String> result = new TreeMap<>();
-        Map<Double,String> result2 = new TreeMap<>();
-        //Map<Double,String> distances = processImages(dbFiles, query);
-        Map<Double,String> distances = processImages(dbFiles, query);
-
-        for (Map.Entry<Double, String> entry : distances.entrySet()) {
-            result.put(entry.getKey(), entry.getValue());
-
-        }
-
-        
-
-
-        return result2;
-
-    }
-
-    private static Map processImages(List<File> dbFiles, Image queryImage) throws Exception {
-        double[][] queryHistogram = Histo(queryImage);
-        queryHistogram = normaliser(Discretisation(Histo(queryImage)), queryImage.getNumberOfPresentPixel());
-        Map<Double,String> distances = new TreeMap<>();
-        //pré-traitement des images à comparer
-        for(File file : dbFiles) {
-            Image img = readImage(file.getAbsolutePath());
-            if(img.getBDim() == 3) {
-                Image filteredImage = filtreMedian(img);
-                double[][] histogram = normaliser(Discretisation(Histo(filteredImage)), img.getNumberOfPresentPixel());
-                double dist = getDistance(queryHistogram, histogram);
-                distances.put(dist, file.getName());
-
-            }
-
-        }
-
-
-        return distances;
-    }
-
-
-
-
-    public static Map processImagesFile(Image queryImage, String type) throws Exception {
-        double[][] queryHistogram = Histo(queryImage);
-        if(type == RGB) {
-            queryHistogram = normaliser(Discretisation(Histo(queryImage)), queryImage.getNumberOfPresentPixel());
-        }else if(type == HSV) {
-            queryHistogram = normaliser(discretizeHSV(getHistogramHSV(queryImage)), queryImage.getNumberOfPresentPixel());
-        }
-
-        Map<Double,String> distances = new TreeMap<>();
-
-        //lecture du fichier
-        try {
-
-            File file = null;
-            if(type == RGB) {
-                file = new File(Indexation.getINDEXES_PATH());
-            }else if(type == HSV) {
-                file = new File(Indexation.getINDEXES_PATH_HSV());
-            }
-
-            assert file != null;
-            Scanner myReader = new Scanner(file);
-            while (myReader.hasNextLine()) {
-                String line = myReader.nextLine();
-                String[] data = line.split(Indexation.getFILE_SEPARATOR());
-                if(data!=null) {
-                    String fileName = data[0];
-                    double[][] histogram = new double[3][10];
-                    int cpt=0;
-                    for(int i=1; i<data.length; i++) {
-                        histogram[cpt][0] = parseDouble(data[i].split(Indexation.getRGB_SEPARATOR())[0]);
-                        histogram[cpt][1] = parseDouble(data[i].split(Indexation.getRGB_SEPARATOR())[1]);
-                        histogram[cpt][2] = parseDouble(data[i].split(Indexation.getRGB_SEPARATOR())[2]);
-
-                        cpt++;
-                    }
-                    double dist = 0.0;
-                    if(type == RGB) {
-                        dist = getDistance(queryHistogram, histogram);
-                    }else if(type == HSV) {
-                        dist = getDistanceHSV(queryHistogram, histogram);
-                    }
-                    distances.put(dist, fileName);
-                }
-
-            }
-            myReader.close();
-        } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
-        return distances;
-    }
-
-
-    private static double getDistance(double[][] histogramQuery, double[][] histogramImage) {
-        double sumR = 0;
-        double sumG = 0;
-        double sumB = 0;
-        if(histogramImage.length == histogramQuery.length) {
-            for(int i = 0; i <histogramQuery.length; i++) {
-                sumR+=Math.pow((histogramImage[i][0] - histogramQuery[i][0]), 2);
-                sumG+=Math.pow((histogramImage[i][1] - histogramQuery[i][1]), 2);
-                sumB+=Math.pow((histogramImage[i][2] - histogramQuery[i][2]), 2);
-
-            }
-            double distanceR = Math.sqrt(sumR);
-            double distanceG = Math.sqrt(sumG);
-            double distanceB = Math.sqrt(sumB);
-            return distanceR+distanceG+distanceB;
-        }
-
-        return 0.0;
-    }
-
-
-    public static Image getImageQuery() {
-        File directoryPath = new File(QUERY_PATH);
-        //List of all files and directories
-        File filesList[] = directoryPath.listFiles();
-        for(File file : filesList) {
-            if(!file.isDirectory()) {
-                return readImage(file.getAbsolutePath());
-            }
-        }
-        System.out.println("Problème lors du chargement de l'image requête");
-        return null;
-
-    }
-
-    public static String getDbPath() {
-        return DB_PATH;
-    }
-
-    //---------------------------------------------------------------------------------------------------
-    // HSV
 
     private static List<Double> convertToHSV(int r, int g, int b) {
         List<Double> hsvList = new ArrayList<Double>();
@@ -358,80 +238,15 @@ public class Algorithme {
 
 
 
-    public static double[][] getHistogramHSV(Image image) {
-        ByteImage img = (ByteImage) image;
-        double[][] histogram = new double[361][3];
-
-        //initialisation de toutes les cases à 0
-        for(int i=0; i < histogram.length; i++) {
-            histogram[i][0] = 0;
-            histogram[i][1] = 0;
-            histogram[i][2] = 0;
-        }
 
 
-        //parcourir l'ensemble des pixels
-        for(int x=0; x<img.getXDim(); x++) {
-            for(int y=0; y<img.getYDim();y++) {
-                int r = img.getPixelXYBByte(x, y, 0);
-                int g = img.getPixelXYBByte(x, y, 1);
-                int b = img.getPixelXYBByte(x, y, 2);
-
-                List<Double> hsvList = convertToHSV(r,g,b);
-
-                int h = (int) Math.round(hsvList.get(0)); // valeur entre 0 et 360
-                int s = (int) Math.round(hsvList.get(1)*100); // 95 puis diviser par 100 pour avoir une valeur entre 0 et 1
-                int v = (int) Math.round(hsvList.get(2)*100); // 15 puis diviser par 100 pour avoir une valeur entre 0 et 1
-
-                histogram[h][0] +=1;
-                histogram[s][1] +=1;
-                histogram[v][2] +=1;
-            }
-        }
-        return histogram;
-    }
-
-
-    public static double[][] discretizeHSV(double[][] histogramHSV){
-        double[][] newHistogram = new double [10][3];
-
-        int start = 0;
-        int stop = 35;
-        for(int i=0; i < newHistogram.length; i++) {
-            double h = getRvalues(histogramHSV, start, stop);
-            double s = getGvalues(histogramHSV, start, stop);
-            double v = getBvalues(histogramHSV, start, stop);
-            newHistogram[i][0] = h;
-            newHistogram[i][1] = s;
-            newHistogram[i][2] = v;
-            start+=35;
-            stop+=35;
-
-        }
-        return newHistogram;
-    }
-
-    private static double getDistanceHSV(double[][] histogramQuery, double[][] histogramImage) {
-        double sumH = 0.0; // H
-        double sumS = 0.0; // S
-        double sumV = 0.0; // V
-
-
-        if (histogramImage.length == histogramQuery.length) {
-            for (int i = 0; i < histogramQuery[0].length; i++) {
-                sumH += Math.pow(histogramQuery[i][0] - histogramImage[i][0], 2);
-            }
-
-            for (int j = 0; j < histogramQuery[1].length; j++) {
-                sumS += Math.pow(histogramQuery[j][1] - histogramImage[j][1], 2);
-                sumV += Math.pow(histogramQuery[j][2] - histogramImage[j][2], 2);
-            }
-            return Math.sqrt(sumH + sumS + sumV);
-        }
-        return 0.0;
-    }
-
-
+    /**
+     * Obtenir les valeurs dans un interval donné
+     * @param histogram
+     * @param start
+     * @param stop
+     * @return
+     */
     public static double getRvalues(double[][] histogram,int start,  int stop) {
         double cpt = 0;
         if(start >=0 ){
@@ -443,7 +258,13 @@ public class Algorithme {
         return 0.0;
     }
 
-
+    /**
+     * Obtenir les valeurs dans un interval donné
+     * @param histogram
+     * @param start
+     * @param stop
+     * @return
+     */
     public static double getGvalues(double[][] histogram,int start,  int stop) {
         double cpt = 0;
         if(start >=0 ){
@@ -455,7 +276,13 @@ public class Algorithme {
         return 0.0;
     }
 
-
+    /**
+     * Obtenir les valeurs dans un interval donné
+     * @param histogram
+     * @param start
+     * @param stop
+     * @return
+     */
     public static double getBvalues(double[][] histogram,int start,  int stop) {
         double cpt = 0;
         if(start >=0){
@@ -466,4 +293,336 @@ public class Algorithme {
         }
         return 0.0;
     }
+
+    /**
+     * Normalisation d'un histogramme
+     * @param histogram
+     * @param nbPixels
+     */
+    public static double[][] normalise(double[][] histogram, int nbPixels) {
+        double[][] newHistogram = new double[SIZE_HISTO][3];
+        for(int i=0; i< histogram.length; i++) {
+            for(int j =0; j <histogram[0].length; j++) {
+                newHistogram[i][j]= histogram[i][j]/nbPixels;
+
+            }
+        }
+
+        return newHistogram;
+    }
+
+    public static Map<Double, String> getSimilarImages(Image query, String type) {
+        //récupération des images
+        List<File> dbFiles = new ArrayList<>();//liste de toutes les images à comparer
+        //récupérer toutes les images
+        File directoryPath = new File(DB_PATH);
+        //List of all files and directories
+        File filesList[] = directoryPath.listFiles();
+        for(File file : filesList) {
+            File innerFilesList[];
+            if(file.isDirectory()) {
+                dbFiles.addAll(Arrays.asList(file.listFiles()));
+            }else if(file.isFile()) dbFiles.add(file);
+        }
+        Map<Double,String> result = new TreeMap<>();
+        Map<Double,String> result2 = new TreeMap<>();
+        //Map<Double,String> distances = processImages(dbFiles, query);
+        Map<Double,String> distances = processImagesFile(query, type);
+
+        for (Map.Entry<Double, String> entry : distances.entrySet()) {
+            result.put(entry.getKey(), entry.getValue());
+
+        }
+
+
+        int cpt =0;
+        for (Map.Entry<Double, String> entry : result.entrySet()) {
+            if(cpt < 10) {
+                result2.put(entry.getKey(), entry.getValue());
+                cpt++;
+            }
+
+        }
+
+        return result2;
+
+    }
+
+
+
+
+
+
+    private static Map processImages(List<File> dbFiles, Image queryImage) {
+        double[][] queryHistogram = getHistogram(queryImage);
+        queryHistogram = normalise(discretize(getHistogram(queryImage)), queryImage.getNumberOfPresentPixel());
+        Map<Double,String> distances = new TreeMap<>();
+        //pré-traitement des images à comparer
+        for(File file : dbFiles) {
+            Image img = readImage(file.getAbsolutePath());
+            if(img.getBDim() == 3) {
+                Image filteredImage = filtreMedian(img);
+                double[][] histogram = normalise(discretize(getHistogram(filteredImage)), img.getNumberOfPresentPixel());
+                double dist = getDistance(queryHistogram, histogram);
+                distances.put(dist, file.getName());
+
+            }
+
+        }
+
+
+        return distances;
+    }
+
+    public static Map processImagesFile(Image queryImage, String type) {
+        double[][] queryHistogram = getHistogram(queryImage);
+
+        if(type == RGB) {
+            queryHistogram = normalise(discretize(getHistogram(queryImage)), queryImage.getNumberOfPresentPixel());
+        }else if(type == HSV) {
+            queryHistogram = normalise(discretizeHSV(getHistogramHSV(queryImage)), queryImage.getNumberOfPresentPixel());
+        }
+
+        Map<Double,String> distances = new TreeMap<>();
+
+        //lecture du fichier
+        try {
+            File file = null;
+            if(type == RGB) {
+                file = new File(Indexation.getINDEXES_PATH());
+            }else if(type == HSV) {
+                file = new File(Indexation.getINDEXES_PATH_HSV());
+            }
+
+            Scanner myReader = new Scanner(file);
+            while (myReader.hasNextLine()) {
+                String line = myReader.nextLine();
+                String[] data = line.split(Indexation.getFILE_SEPARATOR());
+                if(data!=null) {
+                    String fileName = data[0];
+                    double[][] histogram = new double[SIZE_HISTO][3];
+                    int cpt=0;
+                    for(int i=1; i<data.length; i++) {
+                        histogram[cpt][0] = Double.valueOf(data[i].split(Indexation.getRGB_SEPARATOR())[0]);
+                        histogram[cpt][1] = Double.valueOf(data[i].split(Indexation.getRGB_SEPARATOR())[1]);
+                        histogram[cpt][2] = Double.valueOf(data[i].split(Indexation.getRGB_SEPARATOR())[2]);
+
+                        cpt++;
+                    }
+                    double dist = 0.0;
+                    if(type == RGB) {
+                        dist = getDistance(queryHistogram, histogram);
+                    }else if(type == HSV) {
+                        dist = getDistanceHSV(queryHistogram, histogram);
+                    }
+                    distances.put(dist, fileName);
+                }
+
+            }
+            myReader.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+        return distances;
+    }
+
+    /**
+     * Calcul de la distance entre deux histogrammes
+     * @param histogramQuery
+     * @param histogramImage
+     * @return
+     */
+    private static double getDistance(double[][] histogramQuery, double[][] histogramImage) {
+        double sumR = 0;
+        double sumG = 0;
+        double sumB = 0;
+        if(histogramImage.length == histogramQuery.length) {
+            for(int i = 0; i <histogramQuery.length; i++) {
+                sumR+=Math.pow((histogramImage[i][0] - histogramQuery[i][0]), 2);
+                sumG+=Math.pow((histogramImage[i][1] - histogramQuery[i][1]), 2);
+                sumB+=Math.pow((histogramImage[i][2] - histogramQuery[i][2]), 2);
+
+            }
+            double distanceR = Math.sqrt(sumR);
+            double distanceG = Math.sqrt(sumG);
+            double distanceB = Math.sqrt(sumB);
+            return distanceR+distanceG+distanceB;
+        }
+
+        return 0.0;
+    }
+
+
+
+    /**
+     * Calcul de la distance entre deux histogrammes
+     * @param histogramQuery
+     * @param histogramImage
+     * @return
+     */
+    private static double getDistanceHSV(double[][] histogramQuery, double[][] histogramImage) {
+        double sumH = 0.0; // H
+        double sumS = 0.0; // S
+        double sumV = 0.0; // V
+
+        // METHODE  1
+
+        if(histogramImage.length == histogramQuery.length) {
+            for(int i = 0; i <histogramQuery[0].length; i++) {
+                sumH += Math.pow(histogramQuery[i][0]-histogramImage[i][0], 2);
+            }
+
+            for (int j = 0; j < histogramQuery[1].length; j++) {
+                sumS += Math.pow(histogramQuery[j][1]-histogramImage[j][1], 2);
+                sumV += Math.pow(histogramQuery[j][2]-histogramImage[j][2], 2);
+            }
+            return Math.sqrt(sumH+sumS+sumV);
+        }
+
+
+        // METHODE 2
+		/*
+		if(histogramImage.length == histogramQuery.length) {
+			for(int i = 0; i <histogramQuery.length; i++) {
+				double x1 = histogramQuery[i][1]*Math.cos(histogramQuery[i][0]);
+				double x2 = histogramImage[i][1]*Math.cos(histogramImage[i][0]);
+				double y1 = histogramQuery[i][1]*Math.sin(histogramQuery[i][0]);
+				double y2 = histogramImage[i][1]*Math.sin(histogramImage[i][0]);
+				double z1 = histogramQuery[i][2];
+				double z2 = histogramImage[i][2];
+
+				sumH+=Math.pow(x2-x1, 2);
+				sumS+=Math.pow(y2-y1, 2);
+				sumV+=Math.pow(z2-z1, 2);
+
+			}
+			double distanceH = Math.sqrt(sumH);
+			double distanceS = Math.sqrt(sumS);
+			double distanceV = Math.sqrt(sumV);
+
+			double distance = distanceH+distanceS+distanceV;
+
+			return distance;
+		}
+		*/
+
+        // METHODE 3
+		/*
+		if(histogramImage.length == histogramQuery.length) {
+			for(int i = 0; i <histogramQuery.length; i++) {
+
+				double dh = Math.min(Math.abs(histogramImage[i][0]-histogramQuery[i][0]), 360-Math.abs(histogramImage[i][0]-histogramQuery[i][0]))/180.0;
+				double ds = Math.abs(histogramImage[i][1]-histogramQuery[i][1]);
+				double dv = Math.abs(histogramImage[i][2]-histogramQuery[i][2])/255.0;
+
+				sumH+=dh*dh;
+				sumS+=ds*ds;
+				sumV+=dv*dv;
+			}
+			double distance = Math.sqrt(sumH+sumS+sumV);
+
+			return distance;
+		}
+		*/
+
+
+        return 0.0;
+
+    }
+
+    public static void displayHistogram(double[][] histogram) {
+
+        //initialisation de toutes les cases à 0
+        StringBuilder s = new StringBuilder();
+        for(int i=0; i < histogram.length; i++) {
+            for(int j =0;j<histogram[1].length; j++) {
+                s.append(histogram[i][j]);
+                s.append(" ");
+            }
+            s.append("\n");
+        }
+
+    }
+
+
+    public static Image getImageQuery() {
+        File directoryPath = new File(QUERY_PATH);
+        //List of all files and directories
+        File filesList[] = directoryPath.listFiles();
+        for(File file : filesList) {
+            if(!file.isDirectory()) {
+                return readImage(file.getAbsolutePath());
+            }
+        }
+        System.out.println("Problème lors du chargement de l'image requête");
+        return null;
+
+    }
+
+    public static double[][] discretize(double[][] histogram){
+        double[][] newHistogram = new double [SIZE_HISTO][3];
+
+        int start = 0;
+        int stop = FACTOR;
+        for(int i=0; i < newHistogram.length; i++) {
+            double r = getRvalues(histogram, start, stop);
+            double g = getGvalues(histogram, start, stop);
+            double b = getBvalues(histogram, start, stop);
+            newHistogram[i][0] = r;
+            newHistogram[i][1] = g;
+            newHistogram[i][2] = b;
+            start+=FACTOR;
+            stop+=FACTOR;
+
+        }
+
+
+        return newHistogram;
+    }
+
+
+    public static double[][] discretizeHSV(double[][] histogramHSV){
+        double[][] newHistogram = new double [SIZE_HISTO][3];
+
+        int start = 0;
+        int stop = FACTORHSV;
+        for(int i=0; i < newHistogram.length; i++) {
+            double h = getRvalues(histogramHSV, start, stop);
+            double s = getGvalues(histogramHSV, start, stop);
+            double v = getBvalues(histogramHSV, start, stop);
+            newHistogram[i][0] = h;
+            newHistogram[i][1] = s;
+            newHistogram[i][2] = v;
+            start+=FACTORHSV;
+            stop+=FACTORHSV;
+
+        }
+        return newHistogram;
+    }
+
+
+    public static String getImageQueryPath() {
+        File directoryPath = new File(QUERY_PATH);
+        //List of all files and directories
+        File filesList[] = directoryPath.listFiles();
+        for(File file : filesList) {
+            if(!file.isDirectory()) {
+                return file.getAbsolutePath();
+            }
+        }
+        System.out.println("Problème lors du chargement de l'image requête");
+        return null;
+
+    }
+
+
+    public static String getDB_PATH() {
+        return DB_PATH;
+    }
+
+
+
+
+
 }

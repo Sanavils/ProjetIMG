@@ -1,5 +1,5 @@
 package Appli;
-
+/*
 import algoimage.HistogrammeTools;
 import fr.unistra.pelican.Image;
 import fr.unistra.pelican.algorithms.io.ImageLoader;
@@ -25,4 +25,6 @@ public class Partie1App2 {
 
 }
 
+
+ */
 

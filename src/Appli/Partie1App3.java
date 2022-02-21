@@ -3,7 +3,7 @@ package Appli;
 import algoimage.HistogrammeTools;
 import fr.unistra.pelican.Image;
 import fr.unistra.pelican.algorithms.io.ImageLoader;
-
+/*
 import static algoimage.Algorithme.Discretisation;
 import static algoimage.Algorithme.Histo;
 
@@ -29,3 +29,6 @@ public class Partie1App3 {
 
 
 }
+
+
+ */

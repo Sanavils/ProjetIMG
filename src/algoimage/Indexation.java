@@ -26,7 +26,7 @@ public class Indexation {
         //récupération des images
         List<File> dbFiles = new ArrayList<>();//liste de toutes les images à comparer
         //récupérer toutes les images
-        File directoryPath = new File(Algorithme.getDbPath());
+        File directoryPath = new File(Algorithme.getDB_PATH());
         //List of all files and directories
         File filesList[] = directoryPath.listFiles();
         for(File file : filesList) {
@@ -50,7 +50,7 @@ public class Indexation {
                     Image img = Algorithme.readImage(file.getAbsolutePath());
                     if(img.getBDim() == 3) {
                         Image filteredImage = img;
-                        double[][] histogram = Algorithme.normaliser(Algorithme.Discretisation(Algorithme.Histo(filteredImage)), img.getNumberOfPresentPixel());
+                        double[][] histogram = Algorithme.normalise(Algorithme.discretize(Algorithme.getHistogram(filteredImage)), img.getNumberOfPresentPixel());
                         String line = file.getAbsolutePath();
                         line+=FILE_SEPARATOR;
                         for(int i =0; i< histogram.length;i++) {
@@ -77,8 +77,6 @@ public class Indexation {
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -88,7 +86,7 @@ public class Indexation {
         //récupération des images
         List<File> dbFiles = new ArrayList<>();//liste de toutes les images à comparer
         //récupérer toutes les images
-        File directoryPath = new File(Algorithme.getDbPath());
+        File directoryPath = new File(Algorithme.getDB_PATH());
         //List of all files and directories
         File filesList[] = directoryPath.listFiles();
         for(File file : filesList) {
@@ -110,7 +108,7 @@ public class Indexation {
                     Image img = Algorithme.readImage(file.getAbsolutePath());
                     if(img.getBDim() == 3) {
                         Image filteredImage = Algorithme.filtreMedian(img);
-                        double[][] histogram = Algorithme.normaliser(Algorithme.discretizeHSV(Algorithme.getHistogramHSV(filteredImage)), img.getNumberOfPresentPixel());
+                        double[][] histogram = Algorithme.normalise(Algorithme.discretizeHSV(Algorithme.getHistogramHSV(filteredImage)), img.getNumberOfPresentPixel());
                         String line = file.getAbsolutePath();
                         line+=FILE_SEPARATOR;
                         for(int i =0; i< histogram.length;i++) {

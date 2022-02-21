@@ -10,13 +10,11 @@ import java.util.Map;
 
 public class partie3 {
 /*
-    private static String QUERY_CATEGORY="motos";
     private static String MODE="hsv";
 
     public static void main(String[] args) throws Exception {
 
             if(args.length!=0) {
-                QUERY_CATEGORY = args[0];
                 MODE = args[1];
             }else {
                 System.out.println("Veuillez indiquer en paramètre la catégorie de l'image de requête + le mode de calcul des distances");
@@ -39,5 +37,7 @@ public class partie3 {
 
     }
 
-         */
+
+
+ */
 }
